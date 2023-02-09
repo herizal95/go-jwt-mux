@@ -3,8 +3,11 @@ package authcontroller
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/herizal95/go-jwt-mux/config"
 	"github.com/herizal95/go-jwt-mux/helper"
 	"github.com/herizal95/go-jwt-mux/models"
 	"golang.org/x/crypto/bcrypt"
@@ -45,17 +48,35 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// prosess pembuatan token jwt
-	// expTime := time.Now().Add(time.Minute * 1)
-	// claims := &config.JWTClaim{
-	// 	Username: users.Username,
-	// 	RegisteredClaims: jwt.RegisteredClaims{
-	// 		Issuer:    "alphacsoft.com",
-	// 		ExpiresAt: jwt.NewNumericDate(expTime),
-	// 	},
-	// }
+	expTime := time.Now().Add(time.Minute * 1)
+	claims := &config.JWTClaim{
+		Username: users.Username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    "Herizal Tantowijaya",
+			ExpiresAt: jwt.NewNumericDate(expTime),
+		},
+	}
 
 	// mendeklarasikan algoritma yang akan digunakan untuk signing
+	tokenAlgo := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	// signed token
+	token, err := tokenAlgo.SignedString(config.JWT_key)
+	if err != nil {
+		response := map[string]string{"message": err.Error()}
+		helper.ResponseJSON(w, http.StatusInternalServerError, response)
+		return
+	}
 
+	// set token ke cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Path:     "/",
+		Value:    token,
+		HttpOnly: true,
+	})
+
+	response := map[string]string{"message": "Login Berhasil"}
+	helper.ResponseJSON(w, http.StatusOK, response)
 }
 
 func Register(w http.ResponseWriter, r *http.Request) {
