@@ -15,6 +15,7 @@ import (
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
+
 	// mengambil inputan json
 	var userInput models.User
 	user := json.NewDecoder(r.Body)
@@ -34,7 +35,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			helper.ResponseJSON(w, http.StatusUnauthorized, response)
 			return
 		default:
-			response := map[string]string{"message": err.Error()}
+			response := map[string]string{"message": "err.Error()"}
 			helper.ResponseJSON(w, http.StatusInternalServerError, response)
 			return
 		}
@@ -42,7 +43,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	// cek password valid
 	if err := bcrypt.CompareHashAndPassword([]byte(users.Password), []byte(userInput.Password)); err != nil {
-		response := map[string]string{"message": "username atau password salah"}
+		response := map[string]string{"message": "username atau password tidak valid"}
 		helper.ResponseJSON(w, http.StatusUnauthorized, response)
 		return
 	}
@@ -103,11 +104,27 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := map[string]string{"message": "success"}
+	response := map[string]string{
+		"error":   "0",
+		"status":  "success",
+		"message": "create new user",
+	}
 	helper.ResponseJSON(w, http.StatusOK, response)
 
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
+
+	// Hapus token di cookies
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Path:     "/",
+		Value:    "",
+		HttpOnly: true,
+		MaxAge:   -1,
+	})
+
+	response := map[string]string{"message": "Logout Berhasil"}
+	helper.ResponseJSON(w, http.StatusOK, response)
 
 }
